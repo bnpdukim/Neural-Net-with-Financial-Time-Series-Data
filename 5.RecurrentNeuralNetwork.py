@@ -19,22 +19,7 @@ import scipy.stats as stats
 
 from pandas.plotting import register_matplotlib_converters
 
-data = pd.read_hdf('data2.h5', 'new_data')
-#data.index = pd.to_datetime(data.index, format='%Y-%m-%d')
-data['Y'] = data.lrets.shift(-1)
-data.dropna(axis=0, inplace=True)
-data.head()
-
-corr = data.corr()
-f, ax = plt.subplots(figsize=(5, 4))
-plt.title("Correlation between variables")
-sns.heatmap(corr,
-            xticklabels=corr.columns.values,
-            yticklabels=corr.columns.values)
-
-d = deque('ghi')                 # make a new deque with three items
-for elem in d:                   # iterate over the deque's elements
-    print (elem.upper())
+from keras.utils import plot_model
 
 
 def preprocess_df(data, shuffle=True):
@@ -70,17 +55,6 @@ def preprocess_df(data, shuffle=True):
     else:
         return np.array(X), y, mapped_data, scaler
 
-times = sorted(data.index.values)
-last_5pct = sorted(data.index.values)[-int(0.05*len(times))]
-
-validation_main_df = data[(data.index >= last_5pct)]
-main_df = data[(data.index < last_5pct)]
-
-prescaler = RobustScaler()
-prescaler = prescaler.fit(validation_main_df)
-
-X_train, y_train = preprocess_df(main_df)
-X_val, y_val, mapped_data, prescaler = preprocess_df(validation_main_df, shuffle=False)
 
 class SGDRScheduler(Callback):
     '''Cosine annealing learning rate scheduler with periodic restarts.
@@ -259,10 +233,33 @@ def build_model():
     model.compile(loss='mse', optimizer=opt, metrics=['mse'])
     return model
 
+
+data = pd.read_hdf('data2.h5', 'new_data')
+data['Y'] = data.lrets.shift(-1)
+data.dropna(axis=0, inplace=True)
+print(data.head())
+
+corr = data.corr()
+f, ax = plt.subplots(figsize=(5, 4))
+plt.title("Correlation between variables")
+sns.heatmap(corr,
+            xticklabels=corr.columns.values,
+            yticklabels=corr.columns.values)
+
+times = sorted(data.index.values)
+last_5pct = sorted(data.index.values)[-int(0.05*len(times))]
+
+validation_main_df = data[(data.index >= last_5pct)]
+main_df = data[(data.index < last_5pct)]
+
+prescaler = RobustScaler()
+prescaler = prescaler.fit(validation_main_df)
+
+X_train, y_train = preprocess_df(main_df)
+X_val, y_val, mapped_data, prescaler = preprocess_df(validation_main_df, shuffle=False)
+
 model = build_model()
 
-from keras.utils import plot_model
-import os
 plot_model(model, to_file='model.png')
 
 # find learning rate first
