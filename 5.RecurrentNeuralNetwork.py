@@ -33,6 +33,7 @@ def preprocess_df(data, shuffle=True):
     prev_days = deque(
         maxlen=SEQ_LEN)  # These will be our actual sequences. They are made with deque, which keeps the maximum length by popping out older values as new ones come in
 
+
     for i in data:  # iterate over the values
         prev_days.append([n for n in i[:-1]])  # store all but the target
 
@@ -49,7 +50,6 @@ def preprocess_df(data, shuffle=True):
     for seq, target in sequential_data:  # going over our new sequential data
         X.append(seq)  # X is the sequences
         y.append(target)  # y is the targets/labels (buys vs sell/notbuy)
-
     if shuffle == True:
         return np.array(X), y
     else:
@@ -237,7 +237,7 @@ def build_model():
 data = pd.read_hdf('data2.h5', 'new_data')
 data['Y'] = data.lrets.shift(-1)
 data.dropna(axis=0, inplace=True)
-print(data.head())
+print(data.tail())
 
 corr = data.corr()
 f, ax = plt.subplots(figsize=(5, 4))
